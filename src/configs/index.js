@@ -4,7 +4,7 @@ const nodemailer = require('nodemailer')
 const transporter = nodemailer.createTransport({ // config mail server
   service: 'gmail',
   auth: {
-    user: process.env.EMAIL, // Tài khoản gmail vừa tạo
+    user: process.env.EMAIL || 'elearningwebLD@gmail.com', // Tài khoản gmail vừa tạo
     pass: process.env.EMAIL_PASSWORD, // Mật khẩu tài khoản gmail vừa tạo
   },
   tls: {
