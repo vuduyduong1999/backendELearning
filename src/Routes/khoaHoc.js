@@ -6,7 +6,8 @@ const User = require('../Models/User')
 const jwt = require('jsonwebtoken')
 const moment = require('moment')
 const verifytoken = require('./verifyToken')
-const { convertTimeToString, generateRes } = require('../utils')
+const { convertTimeToString, generateRes, generateOptionMail } = require('../utils')
+const { transporter } = require('../configs')
 // GET COURSE BOUGHT
 router.post('/bought', verifytoken, async (req, res) => {
   try {
@@ -26,7 +27,7 @@ router.post('/bought', verifytoken, async (req, res) => {
             const td = _.find(tds, (o) => o.maKH === t.id)
             t.progress = {
               percent: td ? td.seen / t.soLuongBaiGiang : 0,
-              seen: td.seen || null,
+              seen: td ? td.seen : -1,
             }
             t.active = true
             t.tongThoiLuong = convertTimeToString(t.tongThoiLuong)
@@ -130,9 +131,13 @@ router.post('/add', verifytoken, async (req, res) => {
       return res.status(400).json({ success: false, message: "User type must teacher to create new course ...'" })
     }
     const { tenKhoaHoc, moTa, gia, thoiHan, maLKH } = req.body
-    const fileupload = req.files.fileupload || null
+    let fileupload = false
+    let filename = ''
+    if (req.files !== undefined) {
+      fileupload = req.files.fileupload
+      filename = fileupload.name.replace(/\s/g, '')
+    }
     let mess = ''
-    const filename = fileupload.name.replace(/\s/g, '') || ''
     let path = fileupload ? '/publish/videos/' + filename : null
     if (fileupload) {
       if (fileupload.mimetype !== 'application/pdf') {
@@ -157,7 +162,7 @@ router.post('/add', verifytoken, async (req, res) => {
       // newItem.SoluongVideo = await new BaiGiang().where({ maKH: newItem.id }).count()
       return newItem
     })
-    res.status(200).json({ success: true, message: 'Create course successfully.../n' + mess, data: newData })
+    res.status(200).json({ success: true, message: 'Create course successfully...' + mess, data: newData })
   } catch (error) {
     console.log('error', error)
     res.status(500).json({ success: false, message: error })
@@ -294,7 +299,7 @@ router.post('/all', async (req, res) => {
             const td = _.find(tds, (o) => o.maKH === t.id)
             t.progress = {
               percent: td ? td.seen / t.soLuongBaiGiang : 0,
-              seen: td.seen || -1,
+              seen: td ? td.seen : -1,
             }
             if (t.maUser === user.id) {
               t.owner = true
@@ -334,28 +339,19 @@ router.post('/delete', verifytoken, async (req, res) => {
       return res.status(400).json({ success: false, message: "You are not allowed to use this function...'" })
     }
     const { maKH } = req.body
-    knex('BaiGiang').where({ maKH }).then((bgs) => {
-      if (bgs.length === 0) {
-        knex('KhoaHoc').where({ id: maKH }).del().then((deleted) => {
-          console.log('===============================================')
-          console.log('deleted course ', deleted)
-          console.log('===============================================')
-          return res.status(200).json(generateRes(true, 'Delete success ...', {}))
-        }).catch((err) => {
-          console.log('===============================================')
-          console.log('err', err)
-          console.log('===============================================')
-          return res.status(500).json(generateRes(false, 'Delete failinggg ...', {}))
-        })
-      } else {
-        knex('BaiGiang').where({ maKH }).del().then((deleted) => {
-          console.log('===============================================')
-          console.log('deleted lession', deleted)
-          console.log('===============================================')
+    knex('KhoaHoc').innerJoin('Users', 'KhoaHoc.maUser', 'Users.id').where('KhoaHoc.id', maKH).select('Users.mail', 'KhoaHoc.tenKhoaHoc').then((infos) => {
+      const info = infos.length !== 0 ? infos[0] : undefined
+      knex('BaiGiang').where({ maKH }).then((bgs) => {
+        if (bgs.length === 0) {
           knex('KhoaHoc').where({ id: maKH }).del().then((deleted) => {
             console.log('===============================================')
             console.log('deleted course ', deleted)
             console.log('===============================================')
+            transporter.sendMail(generateOptionMail(info.mail, 'DELETE COURSE', `${info.tenKhoaHoc} was deleted !!!`), (error, info) => {
+              if (error) {
+                return res.status(500).json(generateRes(true, 'Delete is success but send mail to you is fail....'))
+              }
+            })
             return res.status(200).json(generateRes(true, 'Delete success ...', {}))
           }).catch((err) => {
             console.log('===============================================')
@@ -363,18 +359,40 @@ router.post('/delete', verifytoken, async (req, res) => {
             console.log('===============================================')
             return res.status(500).json(generateRes(false, 'Delete failinggg ...', {}))
           })
-        }).catch((err) => {
-          console.log('===============================================')
-          console.log('err', err)
-          console.log('===============================================')
-          return res.status(500).json(generateRes(false, 'Delete failinggg ...', {}))
-        })
-      }
-    }).catch((err) => {
-      console.log('===============================================')
-      console.log('err', err)
-      console.log('===============================================')
-      return res.status(500).json(generateRes(false, 'Delete failinggg ...', {}))
+        } else {
+          knex('BaiGiang').where({ maKH }).del().then((deleted) => {
+            console.log('===============================================')
+            console.log('deleted lession', deleted)
+            console.log('===============================================')
+            knex('KhoaHoc').where({ id: maKH }).del().then((deleted) => {
+              console.log('===============================================')
+              console.log('deleted course ', deleted)
+              console.log('===============================================')
+              transporter.sendMail(generateOptionMail(info.mail, 'DELETE COURSE', `${info.tenKhoaHoc} was deleted !!!`), (error, info) => {
+                if (error) {
+                  return res.status(500).json(generateRes(true, 'Delete is success but send mail to you is fail....'))
+                }
+              })
+              return res.status(200).json(generateRes(true, 'Delete success ...', {}))
+            }).catch((err) => {
+              console.log('===============================================')
+              console.log('err', err)
+              console.log('===============================================')
+              return res.status(500).json(generateRes(false, 'Delete failinggg ...', {}))
+            })
+          }).catch((err) => {
+            console.log('===============================================')
+            console.log('err', err)
+            console.log('===============================================')
+            return res.status(500).json(generateRes(false, 'Delete failinggg ...', {}))
+          })
+        }
+      }).catch((err) => {
+        console.log('===============================================')
+        console.log('err', err)
+        console.log('===============================================')
+        return res.status(500).json(generateRes(false, 'Delete failinggg ...', {}))
+      })
     })
   } catch (error) {
     console.log('error', error)
@@ -426,7 +444,7 @@ router.post('/', async (req, res) => {
               const td = _.find(tds, (o) => o.maKH === t.id)
               t.progress = {
                 percent: td ? td.seen / t.soLuongBaiGiang : 0,
-                seen: td.seen || -1,
+                seen: td ? td.seen : -1,
               }
               if (t.maUser === user.id) {
                 t.owner = true

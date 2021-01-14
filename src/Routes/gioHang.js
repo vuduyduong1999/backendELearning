@@ -58,7 +58,7 @@ router.post('/delete', verifytoken, async (req, res) => {
                   success: true,
                   message: 'Successfully....',
                   data: {
-                    tongTien: ctgh[0].tongTien || 0,
+                    tongTien: ctgh.length !== 0 ? ctgh[0].tongTien : 0,
                     arraydetailscart: data,
                   },
                 })
@@ -75,15 +75,15 @@ router.post('/delete', verifytoken, async (req, res) => {
 // ADD COURSE TO CART
 router.post('/add', verifytoken, async (req, res) => {
   try {
-    const { id } = req.user
+    const { id: maUser } = req.user
     const { maKH } = req.body
-
     await knex.from('KhoaHoc').where({ id: maKH }).then((khh) => {
       if (!khh[0]) {
         return res.status(400).json({ success: false, message: 'Course was not found....' })
       }
-      knex.from('GioHang').where({ maUser: id }).then((gioHang) => {
+      knex.from('GioHang').where({ maUser }).then((gioHang) => {
         const maGH = gioHang[0].id
+
         if (!maGH) {
           return res.status(400).json({ success: false, message: "Can't get your cart...." })
         }
@@ -91,9 +91,10 @@ router.post('/add', verifytoken, async (req, res) => {
           if (rs[0].count !== 0) {
             return res.status(400).json({ success: false, message: 'Course was existed in your cart....' })
           }
+
           knex.insert({ maGH, maKH }).into('ChiTietGioHang').then((rs) => {
             knex.from('ChiTietGioHang')
-              .innerJoin('GioHang', 'ChiTietGioHang.maGH', 'GioHang.id').where('GioHang.maUser', id)
+              .innerJoin('GioHang', 'ChiTietGioHang.maGH', 'GioHang.id').where('GioHang.maUser', maUser)
               .innerJoin('KhoaHoc', 'ChiTietGioHang.maKH', 'KhoaHoc.id')
               .innerJoin('LoaiKhoaHoc', 'LoaiKhoaHoc.id', 'KhoaHoc.maLKH')
               .then((ctgh) => {
@@ -111,6 +112,10 @@ router.post('/add', verifytoken, async (req, res) => {
                   },
                 })
               })
+          }).catch((err) => {
+            console.log('===============================================')
+            console.log('errinsert', err)
+            console.log('===============================================')
           })
         })
       })

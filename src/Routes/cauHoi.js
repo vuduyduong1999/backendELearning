@@ -149,7 +149,7 @@ router.post('/add', verifyToken, async (req, res) => {
     if (user.get('ma') === 'ST') {
       return res.status(400).json({ success: false, message: "User type must teacher to create new course ...'" })
     }
-    const { noiDung, maBG, arrayAnswer } = req.body
+    const { noiDung, maBG = 0, arrayAnswer } = req.body
     const bg = await new BaiGiang({ id: maBG }).fetch({ require: false })
     if (!bg) {
       return res.status(400).json(generateRes(false, 'Can not find your lession in server....'), {})

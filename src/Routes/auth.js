@@ -162,9 +162,6 @@ router.post('/', verifytoken, async (req, res) => {
         message: error.details[0].message,
       })
     }
-    console.log('===============================================')
-    console.log('body', req.body)
-    console.log('===============================================')
     const userExists = await new Users({ id }).fetch({ require: false })
     if (!userExists) {
       return res.status(400).json({ success: false, message: 'User not found....' })

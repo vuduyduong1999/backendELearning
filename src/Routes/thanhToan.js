@@ -58,7 +58,7 @@ router.post('/', verifyToken, async (req, res) => {
     const { id } = req.user
     if (arrayCourse[0].gia) {
       const user = await new User({ id }).fetch({ require: false })
-      const sodu = user.get('soDu')
+      const sodu = user !== null ? user.get('soDu') : 0
       if (sodu < sumPriceArr) {
         return res.status(400).json(generateRes(false, 'Recharge your account to buy something....', {}))
       }
@@ -67,11 +67,14 @@ router.post('/', verifyToken, async (req, res) => {
     }
     knex.from('HoaDon').insert({ maUser: id }).then((maHD) => {
       const arrInsert = _.map(arrayCourse, (o) => {
-        const t = { maHD }
+        const t = { maHD: maHD[0] }
         t.maKH = o.id
         return t
       })
       knex('ChiTietHoaDon').insert(arrInsert).then((rs) => {
+        console.log('===============================================')
+        console.log('maCTHD', rs)
+        console.log('===============================================')
         knex.from('GioHang').where({ maUser: id }).then((gioHang) => {
           const maGH = gioHang[0].id
           if (!maGH) {
@@ -101,7 +104,7 @@ router.post('/', verifyToken, async (req, res) => {
                       success: true,
                       message: 'Successfully....',
                       data: {
-                        tongTien: ctgh[0].tongTien || 0,
+                        tongTien: ctgh.length !== 0 ? ctgh[0].tongTien : 0,
                         arraydetailscart: arr,
                       },
                     })

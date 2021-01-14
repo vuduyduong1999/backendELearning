@@ -98,11 +98,13 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ success: false, message: 'Course was not existed......' })
     }
     const baiGiangs = await new BaiGiang().where({ maKH }).fetchAll({ require: false })
+
     const newData = _.map(baiGiangs.models, (item) => {
       const rs = item.attributes
       rs.thoiLuong = convertTimeToString(item.get('thoiLuong'))
       return rs
     }).sort((a, b) => a.id - b.id)
+
     if (!token) {
       if (khoaHoc.get('gia') === 0) {
         return res.status(200).json({
@@ -130,21 +132,22 @@ router.post('/', async (req, res) => {
         data: {
           owner: true,
           active: true,
+          enableView: newData.length,
           expired: false,
           arrayVideo: newData,
         },
       })
     }
     knex.from('TienDoHoanThanh').where({ maUser: user.id, maKH }).groupBy('maKH').count('maBG', { as: 'seen' }).select('maKH').then((tds) => {
-      const indp = tds[0].seen - 1
-      const td = tds[0].seen / newData.length || 0
+      const indp = tds.length !== 0 ? tds[0].seen - 1 : -1
+      const td = tds.length !== 0 ? tds[0].seen / newData.length : 0
       if (khoaHoc.get('gia') === 0) {
         return res.status(200).json({
           success: true,
           data: {
             progress: td,
             indexProgress: indp,
-            enableView: indp + 1 || 0,
+            enableView: indp + 1,
             active: true,
             expired: false,
             arrayVideo: newData,
@@ -161,28 +164,31 @@ router.post('/', async (req, res) => {
           const rss = _.sortBy(rs, o => o.thoiGianKetThuc)
           const han = _.find(rss, (i) => i.maKH === maKH)
           if (han) {
-            console.log('===============================================')
-            // console.log('req', moment().subtract(han.thoiGianKetThuc, 'day'))
-            console.log('===============================================')
             const ex = !moment().isBefore(han.thoiGianKetThuc)
             return res.status(200).json({
               success: true,
               data: {
                 progress: td,
                 indexProgress: indp,
-                enableView: indp + 1 || 0,
+                enableView: indp + 1,
                 active: true,
                 expired: ex,
                 arrayVideo: newData,
               },
             })
           } else {
+            console.log('===============================================')
+            console.log('td', td)
+            console.log('===============================================')
+            console.log('===============================================')
+            console.log('ind', indp)
+            console.log('===============================================')
             return res.status(200).json({
               success: true,
               data: {
                 progress: td,
                 indexProgress: indp,
-                enableView: indp + 1 || 0,
+                enableView: indp + 1,
                 active: false,
                 expired: false,
                 arrayVideo: newData,
