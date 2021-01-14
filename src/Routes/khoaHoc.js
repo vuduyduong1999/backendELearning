@@ -339,7 +339,7 @@ router.post('/delete', verifytoken, async (req, res) => {
       return res.status(400).json({ success: false, message: "You are not allowed to use this function...'" })
     }
     const { maKH } = req.body
-    knex('KhoaHoc').innerJoin('Users', 'KhoaHoc.maUser', 'Users.id').where('KhoaHoc.id', maKH).select('Users.mail', 'KhoaHoc.tenKhoaHoc').then((infos) => {
+    knex('KhoaHoc').innerJoin('Users', 'KhoaHoc.maUser', 'Users.id').where('KhoaHoc.id', maKH).select('Users.email', 'KhoaHoc.tenKhoaHoc').then((infos) => {
       const info = infos.length !== 0 ? infos[0] : undefined
       knex('BaiGiang').where({ maKH }).then((bgs) => {
         if (bgs.length === 0) {
@@ -347,7 +347,7 @@ router.post('/delete', verifytoken, async (req, res) => {
             console.log('===============================================')
             console.log('deleted course ', deleted)
             console.log('===============================================')
-            transporter.sendMail(generateOptionMail(info.mail, 'DELETE COURSE', `${info.tenKhoaHoc} was deleted !!!`), (error, info) => {
+            transporter.sendMail(generateOptionMail(info.email, 'DELETE COURSE', `${info.tenKhoaHoc} was deleted !!!`), (error, info) => {
               if (error) {
                 return res.status(500).json(generateRes(true, 'Delete is success but send mail to you is fail....'))
               }

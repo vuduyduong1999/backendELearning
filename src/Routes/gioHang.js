@@ -22,9 +22,6 @@ router.post('/delete', verifytoken, async (req, res) => {
       })
     }
     const { arrayCourse } = req.body
-    console.log('===============================================')
-    console.log('req', req.body)
-    console.log('===============================================')
     if (arrayCourse[0] === undefined) {
       return res.status(400).json({ success: false, message: 'No course checked in your cart ....' })
     }
@@ -107,7 +104,7 @@ router.post('/add', verifytoken, async (req, res) => {
                   success: true,
                   message: 'Successfully....',
                   data: {
-                    tongTien: ctgh[0].tongTien,
+                    tongTien: ctgh.length === 0 ? 0 : ctgh[0].tongTien,
                     arraydetailscart: arr,
                   },
                 })
@@ -160,7 +157,7 @@ router.post('/', verifytoken, async (req, res) => {
             success: true,
             message: 'Successfully....',
             data: {
-              tongTien: ctgh[0].tongTien,
+              tongTien: ctgh.length === 0 ? 0 : ctgh[0].tongTien,
               arraydetailscart: arr,
             },
           })

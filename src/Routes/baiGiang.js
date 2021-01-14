@@ -110,6 +110,7 @@ router.post('/', async (req, res) => {
         return res.status(200).json({
           success: true,
           data: {
+            enableView: newData.length,
             active: true,
             expired: false,
             arrayVideo: newData,
@@ -119,6 +120,7 @@ router.post('/', async (req, res) => {
       return res.status(200).json({
         success: true,
         data: {
+          enableView: newData.length,
           active: false,
           expired: false,
           arrayVideo: newData,
@@ -177,12 +179,6 @@ router.post('/', async (req, res) => {
               },
             })
           } else {
-            console.log('===============================================')
-            console.log('td', td)
-            console.log('===============================================')
-            console.log('===============================================')
-            console.log('ind', indp)
-            console.log('===============================================')
             return res.status(200).json({
               success: true,
               data: {

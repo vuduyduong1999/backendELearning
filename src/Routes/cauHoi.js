@@ -17,7 +17,7 @@ const schemaDeleteQuestion = Joi.object({
   maCH: Joi.number().required(),
 })
 const schemaGetQuestion = Joi.object({
-  token: Joi.string().required(),
+  token: Joi.string(),
   maBG: Joi.number().required(),
 })
 const schemaCheckQuestion = Joi.object({
@@ -32,9 +32,6 @@ const schemaAnswer = Joi.object({
 // CHECK QUESTION
 router.post('/check', verifyToken, async (req, res) => {
   try {
-    console.log('===============================================')
-    console.log('body', req.body)
-    console.log('===============================================')
     const { error } = schemaCheckQuestion.validate(req.body)
     if (error) {
       return res.status(400).json({ success: false, message: error.details[0].message })
@@ -70,16 +67,11 @@ router.post('/check', verifyToken, async (req, res) => {
   }
 })
 // GET QUESTION
-router.post('/', verifyToken, async (req, res) => {
+router.post('/', async (req, res) => {
   try {
     const { error } = schemaGetQuestion.validate(req.body)
     if (error) {
       return res.status(400).json({ success: false, message: error.details[0].message })
-    }
-    const { id } = req.user
-    const user = await new User({ id }).fetch({ require: false })
-    if (!user) {
-      return res.status(400).json({ success: false, message: "User can't found...'" })
     }
     const { maBG } = req.body
 
