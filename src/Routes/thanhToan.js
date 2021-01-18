@@ -17,9 +17,6 @@ router.post('/history', verifyToken, async (req, res) => {
       .where('HoaDon.maUser', id)
       .select('ChiTietHoaDon.id', 'KhoaHoc.tenKhoaHoc', 'KhoaHoc.gia', 'KhoaHoc.thoiHan', 'HoaDon.ngayLapHD', 'ChiTietHoaDon.maHD')
       .then((cthds) => {
-        console.log('===============================================')
-        console.log('cthd', cthds)
-        console.log('===============================================')
         knex('HoaDon').where('HoaDon.maUser', id).then((hds) => {
           const data = _.map(hds, (o) => {
             const arrCTHD = _.filter(cthds, (ob) => ob.maHD === o.id)

@@ -111,10 +111,6 @@ router.post('/delete', verifyToken, async (req, res) => {
       return res.status(400).json({ success: false, message: "User type must teacher to create new course ...'" })
     }
     const { maCH } = req.body
-    const bg = await new BaiGiang({ id: maCH }).fetch({ require: false })
-    if (!bg) {
-      return res.status(400).json(generateRes(false, 'Can not find your lession in server....'), {})
-    }
     knex('CauHoi').where({ id: maCH }).del().then((deleted) => {
       console.log('===============================================')
       console.log('delete length', deleted)

@@ -66,9 +66,6 @@ router.post('/unban', verifytoken, async (req, res) => {
 router.post('/ban', verifytoken, async (req, res) => {
   try {
     const { id } = req.user
-    console.log('===============================================')
-    console.log('re', req.body)
-    console.log('===============================================')
     const user = await new Users({ id }).fetch({ require: false })
     if (!user) {
       return res.status(400).json({ success: false, message: "User can't found...'" })
