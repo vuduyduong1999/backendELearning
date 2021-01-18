@@ -134,8 +134,10 @@ router.post('/add', verifytoken, async (req, res) => {
     let fileupload = false
     let filename = ''
     if (req.files !== undefined) {
-      fileupload = req.files.fileupload
-      filename = fileupload.name.replace(/\s/g, '')
+      if (req.files !== null) {
+        fileupload = req.files.fileupload
+        filename = fileupload.name.replace(/\s/g, '')
+      }
     }
     let mess = ''
     let path = fileupload ? '/publish/videos/' + filename : null
@@ -368,7 +370,7 @@ router.post('/delete', verifytoken, async (req, res) => {
               console.log('===============================================')
               console.log('deleted course ', deleted)
               console.log('===============================================')
-              transporter.sendMail(generateOptionMail(info.mail, 'DELETE COURSE', `${info.tenKhoaHoc} was deleted !!!`), (error, info) => {
+              transporter.sendMail(generateOptionMail(info.email, 'DELETE COURSE', `${info.tenKhoaHoc} was deleted !!!`), (error, info) => {
                 if (error) {
                   return res.status(500).json(generateRes(true, 'Delete is success but send mail to you is fail....'))
                 }
