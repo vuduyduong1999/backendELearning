@@ -4,6 +4,8 @@ const knex = require('../databases/knex')
 const KhoaHoc = require('../Models/KhoaHoc')
 const User = require('../Models/User')
 const jwt = require('jsonwebtoken')
+const fs = require('fs')
+
 const moment = require('moment')
 const verifytoken = require('./verifyToken')
 const { convertTimeToString, generateRes, generateOptionMail } = require('../utils')
@@ -362,6 +364,13 @@ router.post('/delete', verifytoken, async (req, res) => {
             return res.status(500).json(generateRes(false, 'Delete failinggg ...', {}))
           })
         } else {
+          // bgs.forEach((i) => {
+          //   fs.unlink(`..${i.video}`, (err) => {
+          //     if (err) {
+          //       return res.status(500).json(generateRes(false, 'can not delete video of lesson in server...'))
+          //     }
+          //   })
+          // })
           knex('BaiGiang').where({ maKH }).del().then((deleted) => {
             console.log('===============================================')
             console.log('deleted lession', deleted)
